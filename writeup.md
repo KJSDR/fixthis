@@ -119,3 +119,27 @@ All three rules were followed naturally. The test file from Rule 1 was cleaned u
 
 **Refine your CLAUDE.md or rules based on output quality. Document what you changed and why in writeup.md.**
 Rules held cleanly on first pass — no refinement needed yet. One observation: Rule 2's scope (`modules/*/metadata/`) technically only catches core files, but the underlying principle (always use `custom/`) is broader. May expand this rule's wording in a future pass to also cover `modules/*/vardefs.php` direct edits.
+
+---
+
+### V1.2 — Feature Addition
+
+**Feature: CRM Quick Stats Dashboard Widget**
+
+A custom dashlet that displays four at-a-glance counts on the SuiteCRM home dashboard: total Contacts, total Accounts, open Cases, and active Opportunities.
+
+**Acceptance Criteria:**
+- The dashlet appears in the "Add Dashlets" dialog on the Home page
+- It displays exactly 4 stats: Total Contacts, Total Accounts, Open Cases, Active Opportunities
+- Counts exclude soft-deleted records (`deleted = 0`)
+- Open Cases = records where `status != 'Closed'`
+- Active Opportunities = records where `sales_stage NOT IN ('Closed Won', 'Closed Lost')`
+- All counts are integers; missing/empty DB results default to 0
+- The data provider class (`QuickStatsProvider`) is unit-testable in isolation with no live DB required
+
+**Files created:**
+- `custom/lib/Dashboard/QuickStatsProvider.php` — pure data logic class, DB-injectable for testing
+- `tests/unit/phpunit/Custom/Dashboard/QuickStatsProviderTest.php` — unit tests (written first)
+- `custom/modules/Home/Dashlets/QuickStatsDashlet/QuickStatsDashlet.php` — dashlet class wiring provider to view
+- `custom/modules/Home/Dashlets/QuickStatsDashlet/QuickStatsDashlet.tpl` — Smarty display template
+- `custom/modules/Home/Dashlets/QuickStatsDashlet/language/en_us.lang.php` — display strings
