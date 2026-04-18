@@ -78,3 +78,20 @@ The modern JSON:API-compliant REST API lives in `Api/V8/`. Entry point is `Api/V
 - `tests/acceptance/` — Codeception browser-based acceptance tests
 - `tests/api/` — Codeception API tests for V8 REST endpoints
 - Test config: `tests/.env.test` (copied from `.env.test.dist` for acceptance/API tests)
+
+## Rules
+
+### `SuiteCRM/modules/**/*.php` and `SuiteCRM/include/**/*.php` — entry point guard required
+Every PHP file in these directories must begin with the guard:
+```php
+if (!defined('sugarEntry') || !sugarEntry) {
+    die('Not A Valid Entry Point');
+}
+```
+This prevents direct HTTP access to internal files. Never remove or bypass it.
+
+### `SuiteCRM/modules/*/metadata/*.php` — never edit core metadata directly
+Core metadata files (`editviewdefs.php`, `detailviewdefs.php`, `listviewdefs.php`, etc.) must not be modified in place. All layout changes must be made by creating the equivalent file under `SuiteCRM/custom/modules/<Module>/metadata/`, which SuiteCRM loads in preference to the core version and which survives upgrades.
+
+### `SuiteCRM/modules/*/language/*.php` — array definitions only, no logic or HTML
+Language files must only define `$mod_strings`, `$app_list_strings`, or `$app_strings` as plain PHP arrays. No control flow, output, HTML, or side effects. The i18n loader includes these files directly and expects pure data.

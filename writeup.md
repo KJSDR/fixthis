@@ -84,3 +84,38 @@ The modern API lives at `/api/v8/` and follows the JSON:API spec. It uses OAuth2
 ## After making code changes
 
 Run **Admin → Quick Repair and Rebuild** in the browser UI. This regenerates caches, syncs the DB schema to vardefs, and rebuilds JS/CSS. Most changes won't show up until you do this.
+
+---
+
+## Assignment Notes
+
+### V1.0 — Exploration & Understanding
+
+**Map the codebase architecture using AI tools. Save exploration logs or summaries.**
+Used Claude Code to walk through the full directory tree — top-level layout, then drilling into `include/MVC/`, `data/`, `modules/`, `Api/V8/`, `custom/`, and `tests/`. Read key files (`index.php`, `SugarApplication.php`, `SugarBean.php`, `composer.json`, `codeception.dist.yml`) to understand the request lifecycle, ORM pattern, and test setup. Findings were captured directly into CLAUDE.md and this writeup.
+
+**Create CLAUDE.md based on what you learned — tech stack, patterns, conventions, gotchas.**
+Created `CLAUDE.md` at the repo root (outside `SuiteCRM/` so it covers the whole project). It documents: the tech stack (PHP 8.1+, MySQL, Apache, Smarty), all dev commands (composer, phpunit, codecept, phpcs), the full request lifecycle, MVC architecture, module structure, the `custom/` override system, the V8 REST API, PSR-4 autoloading, logic hooks, and the `sugarEntry` guard gotcha.
+
+**Create at least 1 AGENTS.md in a key subdirectory with scoped instructions for that area.**
+Created `SuiteCRM/modules/AGENTS.md`. Chose `modules/` because it's the directory agents will touch most often. It covers: the standard module anatomy (every file and what it does), all metadata file types and their purpose, module groups organized by domain (core CRM, AO* add-ons, admin/infrastructure, OAuth2, etc.), step-by-step instructions for the most common modification tasks, and key naming conventions.
+
+---
+
+### V1.1 — Rules & Context Tuning
+
+**Write at least 3 rules with glob or path scoping that enforce the project's existing conventions.**
+Added a `## Rules` section to `CLAUDE.md` with 3 scoped rules derived from patterns observed consistently across all 120+ modules:
+1. `SuiteCRM/modules/**/*.php` + `include/**/*.php` — every PHP file must open with the `sugarEntry` guard (security, prevents direct HTTP access).
+2. `SuiteCRM/modules/*/metadata/*.php` — never edit core metadata; all layout changes go in the `custom/` mirror path (upgrade safety).
+3. `SuiteCRM/modules/*/language/*.php` — language files are pure `$mod_strings` / `$app_list_strings` arrays only, no logic or HTML (required by the i18n loader).
+
+**Test your rules by running a small task and observing agent behavior.**
+Ran one task per rule:
+- Rule 1: Created `modules/Home/TestHelper.php` — guard was included on line 2 before any code. ✓
+- Rule 2: Added a `preferred_name` field to the Contacts edit view — wrote to `custom/modules/Contacts/metadata/editviewdefs.php`, core file untouched. ✓
+- Rule 3: Added `LBL_PREFERRED_NAME` label — written as a plain `$mod_strings` assignment in `custom/modules/Contacts/language/en_us.lang.php`, no logic. ✓
+All three rules were followed naturally. The test file from Rule 1 was cleaned up; the Rule 2 and 3 files are valid customizations and kept.
+
+**Refine your CLAUDE.md or rules based on output quality. Document what you changed and why in writeup.md.**
+Rules held cleanly on first pass — no refinement needed yet. One observation: Rule 2's scope (`modules/*/metadata/`) technically only catches core files, but the underlying principle (always use `custom/`) is broader. May expand this rule's wording in a future pass to also cover `modules/*/vardefs.php` direct edits.
